@@ -1,17 +1,14 @@
 const joi = require('@hapi/joi');
 
 const surgeonIdSchema = joi.string().regex(/^[0-9a-fA-F]{24}$/);
-const rutSchema = joi.number();
-const userNameSchema = joi.string().alphanum().min(3).max(30);
+const userNameSchema = joi.string().min(3).max(30);
 
-const createUserSchema = {
-    rut: rutSchema.required(),
+const createSurgeonSchema = {
     firstname: userNameSchema.required(),
     lastname: userNameSchema.required(),
 };
 
-const updateUserSchema = {
-    rut: rutSchema,
+const updateSurgeonSchema = {
     firstname: userNameSchema,
     lastname: userNameSchema,
 };
@@ -19,6 +16,6 @@ const updateUserSchema = {
 
 module.exports = {
     surgeonIdSchema,
-    createUserSchema,
-    updateUserSchema
+    createSurgeonSchema,
+    updateSurgeonSchema
 };

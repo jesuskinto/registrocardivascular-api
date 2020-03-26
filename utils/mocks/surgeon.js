@@ -1,8 +1,7 @@
 const surgeon = [
     {
-        rut: 25619081,
-        firstname: 'Jesus Miguel',
-        lastname: 'Quinto Teran',
+        "firstname": "Jesus Miguel",
+        "lastname": "Quinto Teran",
     }
 ]
 

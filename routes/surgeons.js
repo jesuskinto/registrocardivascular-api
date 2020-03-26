@@ -1,10 +1,10 @@
 const express = require('express');
 const MongoService = require('../services/mongoService');
 const {
-    userIdSchema,
-    createUserSchema,
-    updateUserSchema
-} = require('../utils/schemas/users');
+    surgeonIdSchema,
+    createSurgeonSchema,
+    updateSurgeonSchema
+} = require('../utils/schemas/surgeon');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 
 const cacheResponse = require('../utils/cacheResponse');
@@ -14,20 +14,20 @@ const {
 } = require('../utils/time')
 
 
-function userApi(app) {
+function surgeonApi(app) {
     const router = express.Router();
-    app.use('/api/users', router);
-    const options = { projection: { password: 0 } };
-    const userService = new MongoService("users", options);
+    app.use('/api/surgeon', router);
+    const options = {};
+    const surgeonService = new MongoService("surgeon", options);
 
     router.get('/', async function (req, res, next) {
         cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
         const { query } = req;
         try {
-            const users = await userService.listAll(query);
+            const users = await surgeonService.listAll(query);
             res.status(200).json({
                 data: users,
-                message: 'users listed'
+                message: 'surgeons listed'
             });
         } catch (error) {
             next(error);
@@ -36,15 +36,15 @@ function userApi(app) {
 
     router.get(
         '/:id',
-        validatorHandler({ id: userIdSchema }, 'params'),
+        validatorHandler({ id: surgeonIdSchema }, 'params'),
         async function (req, res, next) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             try {
-                const user = await userService.list({ id });
+                const user = await surgeonService.list({ id });
                 res.status(200).json({
                     data: user,
-                    message: 'user listed'
+                    message: 'surgeon listed'
                 });
             } catch (error) {
                 next(error);
@@ -53,22 +53,15 @@ function userApi(app) {
 
     router.post(
         '/',
-        validatorHandler(createUserSchema),
+        validatorHandler(createSurgeonSchema),
         async function (req, res, next) {
             const { body: user } = req;
 
             try {
-                // TODO - mover a nivel de mongo con unique field
-                const { email } = user;
-                const users = await userService.listAll({ email });
-                if (users.length) return res.status(400).json({
-                    message: 'email already registered'
-                });
-
-                const userId = await userService.create({ payload: user });
+                const userId = await surgeonService.create({ payload: user });
                 res.status(200).json({
                     data: userId,
-                    message: 'user created'
+                    message: 'surgeon created'
                 });
             } catch (error) {
                 next(error);
@@ -77,25 +70,17 @@ function userApi(app) {
 
     router.patch(
         '/:id',
-        validatorHandler({ id: userIdSchema }, 'params'),
-        validatorHandler(updateUserSchema),
+        validatorHandler({ id: surgeonIdSchema }, 'params'),
+        validatorHandler(updateSurgeonSchema),
         async function (req, res, next) {
             const { body } = req;
             const { id } = req.params;
 
             try {
-                // TODO - mover a nivel de mongo con unique field
-                const { email } = body;
-                const users = await userService.listAll({ email });
-                if (users.length) return res.status(400).json({
-                    message: 'email already registered'
-                });
-
-
-                const user = await userService.update({ body, id });
+                const user = await surgeonService.update({ body, id });
                 res.status(200).json({
                     data: user,
-                    message: 'user edited'
+                    message: 'surgeon edited'
                 });
             } catch (error) {
                 next(error);
@@ -104,14 +89,14 @@ function userApi(app) {
 
     router.delete(
         '/:id',
-        validatorHandler({ id: userIdSchema }, 'params'),
+        validatorHandler({ id: surgeonIdSchema }, 'params'),
         async function (req, res, next) {
             const { id } = req.params;
             try {
-                const userId = await userService.remove({ id })
+                const userId = await surgeonService.remove({ id })
                 res.status(200).json({
                     data: userId,
-                    message: 'user deleted'
+                    message: 'surgeon deleted'
                 });
             } catch (error) {
                 next(error);
@@ -119,4 +104,4 @@ function userApi(app) {
         });
 }
 
-module.exports = userApi;
+module.exports = surgeonApi;

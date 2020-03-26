@@ -1,10 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const UserService = require('../services/userService');
+const MongoService = require('../services/mongoService');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 const { authSchema } = require('../utils/schemas/users');
 
-const userService = new UserService();
+const userService = new MongoService("users");
 
 function authApi(app) {
     const router = express.Router();
