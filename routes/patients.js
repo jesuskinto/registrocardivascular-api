@@ -2,9 +2,9 @@ const express = require('express');
 const MongoService = require('../services/mongoService');
 const { idSchema } = require('../utils/schemas/commons');
 const {
-    createSurgeonSchema,
-    updateSurgeonSchema
-} = require('../utils/schemas/surgeon');
+    createPatientSchema,
+    updatePatientSchema
+} = require('../utils/schemas/patient');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 
 const cacheResponse = require('../utils/cacheResponse');
@@ -14,20 +14,20 @@ const {
 } = require('../utils/time')
 
 
-function surgeonApi(app) {
+function patientApi(app) {
     const router = express.Router();
-    app.use('/api/surgeons', router);
-    const options = {};
-    const surgeonService = new MongoService("surgeon", options);
+    app.use('/api/patients', router);
+    const options = { projection: { password: 0 } };
+    const patientService = new MongoService('patients', options);
 
     router.get('/', async function (req, res, next) {
         cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
         const { query } = req;
         try {
-            const users = await surgeonService.listAll(query);
+            const patients = await patientService.listAll(query);
             res.status(200).json({
-                data: users,
-                message: 'surgeons listed'
+                data: patients,
+                message: 'patients listed'
             });
         } catch (error) {
             next(error);
@@ -41,10 +41,10 @@ function surgeonApi(app) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             try {
-                const user = await surgeonService.list({ id });
+                const patient = await patientService.list({ id });
                 res.status(200).json({
-                    data: user,
-                    message: 'surgeon listed'
+                    data: patient,
+                    message: 'patient listed'
                 });
             } catch (error) {
                 next(error);
@@ -53,15 +53,15 @@ function surgeonApi(app) {
 
     router.post(
         '/',
-        validatorHandler(createSurgeonSchema),
+        validatorHandler(createPatientSchema),
         async function (req, res, next) {
-            const { body: user } = req;
+            const { body: patient } = req;
 
             try {
-                const userId = await surgeonService.create({ payload: user });
+                const patientId = await patientService.create({ payload: patient });
                 res.status(200).json({
-                    data: userId,
-                    message: 'surgeon created'
+                    data: patientId,
+                    message: 'patient created'
                 });
             } catch (error) {
                 next(error);
@@ -71,16 +71,16 @@ function surgeonApi(app) {
     router.patch(
         '/:id',
         validatorHandler({ id: idSchema }, 'params'),
-        validatorHandler(updateSurgeonSchema),
+        validatorHandler(updatePatientSchema),
         async function (req, res, next) {
             const { body } = req;
             const { id } = req.params;
 
             try {
-                const user = await surgeonService.update({ body, id });
+                const user = await patientService.update({ body, id });
                 res.status(200).json({
                     data: user,
-                    message: 'surgeon edited'
+                    message: 'patient edited'
                 });
             } catch (error) {
                 next(error);
@@ -93,10 +93,10 @@ function surgeonApi(app) {
         async function (req, res, next) {
             const { id } = req.params;
             try {
-                const userId = await surgeonService.remove({ id })
+                const patientId = await patientService.remove({ id })
                 res.status(200).json({
-                    data: userId,
-                    message: 'surgeon deleted'
+                    data: patientId,
+                    message: 'patient deleted'
                 });
             } catch (error) {
                 next(error);
@@ -104,4 +104,4 @@ function surgeonApi(app) {
         });
 }
 
-module.exports = surgeonApi;
+module.exports = patientApi;

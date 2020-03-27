@@ -6,6 +6,7 @@ const { config } = require('./config/index');
 const userApi = require('./routes/users');
 const authApi = require('./routes/auth');
 const surgeonApi = require('./routes/surgeons');
+const patientApi = require('./routes/patients');
 const { logError, wrraperError, errorHandler } = require('./utils/middleware/errorsHandler');
 const notFoundHandler = require('./utils/middleware/notFoundHandler');
 
@@ -14,6 +15,7 @@ app.use(express.json());
 userApi(app);
 authApi(app);
 surgeonApi(app);
+patientApi(app);
 
 app.use(notFoundHandler);
 app.use(logError);

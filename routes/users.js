@@ -1,7 +1,9 @@
 const express = require('express');
+const { ObjectId } = require('mongodb');
 const MongoService = require('../services/mongoService');
+const { idSchema } = require('../utils/schemas/commons');
+
 const {
-    userIdSchema,
     createUserSchema,
     updateUserSchema
 } = require('../utils/schemas/users');
@@ -36,7 +38,7 @@ function userApi(app) {
 
     router.get(
         '/:id',
-        validatorHandler({ id: userIdSchema }, 'params'),
+        validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
@@ -77,7 +79,7 @@ function userApi(app) {
 
     router.patch(
         '/:id',
-        validatorHandler({ id: userIdSchema }, 'params'),
+        validatorHandler({ id: idSchema }, 'params'),
         validatorHandler(updateUserSchema),
         async function (req, res, next) {
             const { body } = req;
@@ -86,7 +88,7 @@ function userApi(app) {
             try {
                 // TODO - mover a nivel de mongo con unique field
                 const { email } = body;
-                const users = await userService.listAll({ email });
+                const users = await userService.listAll({ email, _id: { $ne: ObjectId(id) } });
                 if (users.length) return res.status(400).json({
                     message: 'email already registered'
                 });
@@ -104,7 +106,7 @@ function userApi(app) {
 
     router.delete(
         '/:id',
-        validatorHandler({ id: userIdSchema }, 'params'),
+        validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             const { id } = req.params;
             try {
