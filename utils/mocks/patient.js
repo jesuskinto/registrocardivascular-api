@@ -15,7 +15,6 @@ const patient = [
 
 const pathological_personal_history = [
     {
-        rut: 25619081,
         diabetes: null,
         hipertencion: false,
         asma: false,
@@ -62,7 +61,6 @@ const pathological_personal_history = [
 
 const coronary_angiography = [
     {
-        rut: 25619081,
         fecha: null,
         vasos_enfermos: null,
         enfermedad_tci: null,
@@ -82,7 +80,6 @@ const coronary_angiography = [
 
 const transthoracic_echocardiogram = [
     {
-        rut: 25619081,
         esternosis_aortica: {
             tipo: null,
             vmax: null,
@@ -152,7 +149,6 @@ const transthoracic_echocardiogram = [
 
 const heart_surgery = [
     {
-        rut: 25619081,
         primera_cirujia: false,
         redo: false,
         programada: null,
@@ -265,7 +261,6 @@ const heart_surgery = [
 
 const extracorporeal_circulation = [
     {
-        rut: 25619081,
         hora_inicio_cirugia: null,
         hora_fin_cirugia: null,
         hora_inicio_cec: null,
@@ -294,7 +289,6 @@ const extracorporeal_circulation = [
 
 const others = [
     {
-        rut: 25619081,
         dias_uci: null,
         dias_uti: null,
         dias_totales_hospitalizacion: null,
@@ -318,7 +312,6 @@ const others = [
 
 const surgical_protocols = [
     {
-        rut: 25619081,
         notas_operatorias: null,
         primer_cirujano: null,
         fecha: null,

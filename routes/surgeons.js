@@ -77,7 +77,7 @@ function surgeonApi(app) {
             const { id } = req.params;
 
             try {
-                const user = await surgeonService.update({ body, id });
+                const user = await surgeonService.update({ body, query: { id } });
                 res.status(200).json({
                     data: user,
                     message: 'surgeon edited'

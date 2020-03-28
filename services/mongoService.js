@@ -13,8 +13,8 @@ class MongoService {
         return instances || [];
     }
 
-    async list({ id }) {
-        const instance = await this.mongoDB.get(this.collection, { id }, this.options);
+    async list(query) {
+        const instance = await this.mongoDB.get(this.collection, query, this.options);
         return instance || {};
     }
 
@@ -23,13 +23,13 @@ class MongoService {
         return createdIntace;
     }
 
-    async update({ id, body } = {}) {
-        const instance = await this.mongoDB.update(this.collection, id, body);
+    async update({ body, query } = {}) {
+        const instance = await this.mongoDB.update(this.collection, query, body);
         return instance;
     }
 
-    async remove({ id }) {
-        const idDeleted = await this.mongoDB.delete(this.collection, id);
+    async remove(query) {
+        const idDeleted = await this.mongoDB.delete(this.collection, query);
         return idDeleted;
     }
 

@@ -1,12 +1,9 @@
 const express = require('express');
-const { ObjectId } = require('mongodb');
 const MongoService = require('../services/mongoService');
 const { idSchema } = require('../utils/schemas/commons');
-
 const {
-    createUserSchema,
-    updateUserSchema
-} = require('../utils/schemas/users');
+    createOrUpdatecoronaryAngiographySchema
+} = require('../utils/schemas/coronaryAngiography');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 
 const cacheResponse = require('../utils/cacheResponse');
@@ -16,20 +13,20 @@ const {
 } = require('../utils/time')
 
 
-function userApi(app) {
+function coronaryAngiographyApi(app) {
     const router = express.Router();
-    app.use('/api/users', router);
-    const options = { projection: { password: 0 } };
-    const userService = new MongoService("users", options);
+    app.use('/api/coronary-angiography', router);
+    const options = {};
+    const coronaryAngiographyService = new MongoService('coronaryAngiography', options);
 
     router.get('/', async function (req, res, next) {
         cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
         const { query } = req;
         try {
-            const users = await userService.listAll(query);
+            const pphs = await coronaryAngiographyService.listAll(query);
             res.status(200).json({
-                data: users,
-                message: 'users listed'
+                data: pphs,
+                message: 'coronary angiographys listed'
             });
         } catch (error) {
             next(error);
@@ -43,10 +40,10 @@ function userApi(app) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             try {
-                const user = await userService.list({ id });
+                const coronaryAngiography = await coronaryAngiographyService.list({ patient: id });
                 res.status(200).json({
-                    data: user,
-                    message: 'user listed'
+                    data: coronaryAngiography,
+                    message: 'coronary angiography listed'
                 });
             } catch (error) {
                 next(error);
@@ -55,22 +52,17 @@ function userApi(app) {
 
     router.post(
         '/',
-        validatorHandler(createUserSchema),
+        validatorHandler(createOrUpdatecoronaryAngiographySchema),
         async function (req, res, next) {
-            const { body: user } = req;
+            const { body: coronaryAngiography } = req;
+            const { id } = req.params;
+            coronaryAngiography.patient = id
 
             try {
-                // TODO - mover a nivel de mongo con unique field
-                const { email } = user;
-                const users = await userService.listAll({ email });
-                if (users.length) return res.status(400).json({
-                    message: 'email already registered'
-                });
-
-                const userId = await userService.create({ payload: user });
+                const patientId = await coronaryAngiographyService.create({ payload: coronaryAngiography });
                 res.status(200).json({
-                    data: userId,
-                    message: 'user created'
+                    data: patientId,
+                    message: 'coronary angiography created'
                 });
             } catch (error) {
                 next(error);
@@ -80,23 +72,16 @@ function userApi(app) {
     router.patch(
         '/:id',
         validatorHandler({ id: idSchema }, 'params'),
-        validatorHandler(updateUserSchema),
+        validatorHandler(createOrUpdatecoronaryAngiographySchema),
         async function (req, res, next) {
             const { body } = req;
             const { id } = req.params;
 
             try {
-                // TODO - mover a nivel de mongo con unique field
-                const { email } = body;
-                const users = await userService.listAll({ email, _id: { $ne: ObjectId(id) } });
-                if (users.length) return res.status(400).json({
-                    message: 'email already registered'
-                });
-
-                const user = await userService.update({ body, query: { id } });
+                const user = await coronaryAngiographyService.update({ body, query: { patient: id } });
                 res.status(200).json({
                     data: user,
-                    message: 'user edited'
+                    message: 'coronary angiography edited'
                 });
             } catch (error) {
                 next(error);
@@ -109,10 +94,10 @@ function userApi(app) {
         async function (req, res, next) {
             const { id } = req.params;
             try {
-                const userId = await userService.remove({ id })
+                const patientId = await coronaryAngiographyService.remove({ id })
                 res.status(200).json({
-                    data: userId,
-                    message: 'user deleted'
+                    data: patientId,
+                    message: 'coronary angiography deleted'
                 });
             } catch (error) {
                 next(error);
@@ -120,4 +105,4 @@ function userApi(app) {
         });
 }
 
-module.exports = userApi;
+module.exports = coronaryAngiographyApi;

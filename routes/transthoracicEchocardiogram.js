@@ -1,12 +1,9 @@
 const express = require('express');
-const { ObjectId } = require('mongodb');
 const MongoService = require('../services/mongoService');
 const { idSchema } = require('../utils/schemas/commons');
-
 const {
-    createUserSchema,
-    updateUserSchema
-} = require('../utils/schemas/users');
+    createOrUpdatePatientSchema
+} = require('../utils/schemas/transthoracicEchocardiogram');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 
 const cacheResponse = require('../utils/cacheResponse');
@@ -16,20 +13,20 @@ const {
 } = require('../utils/time')
 
 
-function userApi(app) {
+function transthoracicEchocardiogramApi(app) {
     const router = express.Router();
-    app.use('/api/users', router);
-    const options = { projection: { password: 0 } };
-    const userService = new MongoService("users", options);
+    app.use('/api/transthoracic-echocardiogram', router);
+    const options = {};
+    const transthoracicEchocardiogramService = new MongoService('transthoracicEchocardiogram', options);
 
     router.get('/', async function (req, res, next) {
         cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
         const { query } = req;
         try {
-            const users = await userService.listAll(query);
+            const pphs = await transthoracicEchocardiogramService.listAll(query);
             res.status(200).json({
-                data: users,
-                message: 'users listed'
+                data: pphs,
+                message: 'transthoracic echocardiogram listed'
             });
         } catch (error) {
             next(error);
@@ -43,10 +40,10 @@ function userApi(app) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             try {
-                const user = await userService.list({ id });
+                const transthoracicEchocardiogram = await transthoracicEchocardiogramService.list({ patient: id });
                 res.status(200).json({
-                    data: user,
-                    message: 'user listed'
+                    data: transthoracicEchocardiogram,
+                    message: 'transthoracic echocardiogram listed'
                 });
             } catch (error) {
                 next(error);
@@ -55,22 +52,17 @@ function userApi(app) {
 
     router.post(
         '/',
-        validatorHandler(createUserSchema),
+        validatorHandler(createOrUpdatePatientSchema),
         async function (req, res, next) {
-            const { body: user } = req;
+            const { body: transthoracicEchocardiogram } = req;
+            const { id } = req.params;
+            transthoracicEchocardiogram.patient = id
 
             try {
-                // TODO - mover a nivel de mongo con unique field
-                const { email } = user;
-                const users = await userService.listAll({ email });
-                if (users.length) return res.status(400).json({
-                    message: 'email already registered'
-                });
-
-                const userId = await userService.create({ payload: user });
+                const patientId = await transthoracicEchocardiogramService.create({ payload: transthoracicEchocardiogram });
                 res.status(200).json({
-                    data: userId,
-                    message: 'user created'
+                    data: patientId,
+                    message: 'transthoracic echocardiogram created'
                 });
             } catch (error) {
                 next(error);
@@ -80,23 +72,16 @@ function userApi(app) {
     router.patch(
         '/:id',
         validatorHandler({ id: idSchema }, 'params'),
-        validatorHandler(updateUserSchema),
+        validatorHandler(createOrUpdatePatientSchema),
         async function (req, res, next) {
             const { body } = req;
             const { id } = req.params;
 
             try {
-                // TODO - mover a nivel de mongo con unique field
-                const { email } = body;
-                const users = await userService.listAll({ email, _id: { $ne: ObjectId(id) } });
-                if (users.length) return res.status(400).json({
-                    message: 'email already registered'
-                });
-
-                const user = await userService.update({ body, query: { id } });
+                const user = await transthoracicEchocardiogramService.update({ body, query: { patient: id } });
                 res.status(200).json({
                     data: user,
-                    message: 'user edited'
+                    message: 'transthoracic echocardiogram edited'
                 });
             } catch (error) {
                 next(error);
@@ -109,10 +94,10 @@ function userApi(app) {
         async function (req, res, next) {
             const { id } = req.params;
             try {
-                const userId = await userService.remove({ id })
+                const patientId = await transthoracicEchocardiogramService.remove({ id })
                 res.status(200).json({
-                    data: userId,
-                    message: 'user deleted'
+                    data: patientId,
+                    message: 'transthoracic echocardiogram deleted'
                 });
             } catch (error) {
                 next(error);
@@ -120,4 +105,4 @@ function userApi(app) {
         });
 }
 
-module.exports = userApi;
+module.exports = transthoracicEchocardiogramApi;
