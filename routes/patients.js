@@ -14,6 +14,16 @@ const {
 } = require('../utils/time')
 
 
+function cleanTextSearch(textSearch) {
+    textSearch = textSearch.replace(/(a|á)/i, '(a|á)');
+    textSearch = textSearch.replace(/(e|é)/i, '(e|é)');
+    textSearch = textSearch.replace(/(i|í)/i, '(i|í)');
+    textSearch = textSearch.replace(/(o|ó)/i, '(o|ó)');
+    textSearch = textSearch.replace(/(u|ú)/i, '(u|ú)');
+    return new RegExp(textSearch, 'i');
+}
+
+
 function patientApi(app) {
     const router = express.Router();
     app.use('/api/patients', router);
@@ -25,24 +35,41 @@ function patientApi(app) {
     const heartSurgeryService = new MongoService('heartSurgery');
     const extracorporealCirculationService = new MongoService('extracorporealCirculation');
     const othersService = new MongoService('others');
-    const surgicalProtocolsService = new MongoService('surgicalProtocols');
 
     router.get('/', async function (req, res, next) {
         cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
         const { query } = req;
+        const page = Number(req.query.page || 1);
+        delete query.page;
+        const resPerPage = 9;
+
         try {
             const { textSearch } = query;
             if (textSearch) {
-                //const patients = await patientService.listAll(query);
-                return res.status(400).json({
-                    data: [],
+                const cleanText = cleanTextSearch(textSearch);
+                const patientQuery = {
+                    $or: [
+                        { rut: cleanText },
+                        { firstname: cleanText },
+                        { lastname: cleanText }
+                    ]
+                }
+                const { res: patients, count } = await patientService.listAll(patientQuery, { page, resPerPage });
+                return res.status(200).json({
+                    data: patients,
+                    count,
+                    page,
+                    resPerPage,
                     message: 'patients listed'
                 });
-            }
+            } else delete query.textSearch;
 
-            const patients = await patientService.listAll(query);
+            const { res: patients, count } = await patientService.listAll(query, { page, resPerPage });
             res.status(200).json({
                 data: patients,
+                count,
+                page,
+                resPerPage,
                 message: 'patients listed'
             });
         } catch (error) {
@@ -78,9 +105,6 @@ function patientApi(app) {
 
                     const others = await othersService.list({ patient: id });
                     patient.others = others;
-
-                    const surgicalProtocols = await surgicalProtocolsService.list({ patient: id });
-                    patient.surgicalProtocols = surgicalProtocols;
 
                     return res.status(200).json({
                         data: patient,

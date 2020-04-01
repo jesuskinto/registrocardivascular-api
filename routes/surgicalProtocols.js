@@ -3,7 +3,7 @@ const MongoService = require('../services/mongoService');
 const { idSchema } = require('../utils/schemas/commons');
 const {
     createOrUpdatePatientSchema
-} = require('../utils/schemas/pph');
+} = require('../utils/schemas/surgicalProtocols');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 
 const cacheResponse = require('../utils/cacheResponse');
@@ -13,20 +13,20 @@ const {
 } = require('../utils/time')
 
 
-function pphApi(app) {
+function surgicalProtocolsApi(app) {
     const router = express.Router();
-    app.use('/api/pph', router);
+    app.use('/api/surgical-protocols', router);
     const options = {};
-    const pphService = new MongoService('pph', options);
+    const surgicalProtocolsService = new MongoService('surgicalProtocols', options);
 
     router.get('/', async function (req, res, next) {
         cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
         const { query } = req;
         try {
-            const pphs = await pphService.listAll(query);
+            const surgicalProtocolss = await surgicalProtocolsService.listAll(query);
             res.status(200).json({
-                data: pphs,
-                message: 'pathological personal histories listed'
+                data: surgicalProtocolss,
+                message: 'surgical protocols listed'
             });
         } catch (error) {
             next(error);
@@ -40,10 +40,10 @@ function pphApi(app) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             try {
-                const pph = await pphService.list({ patient: id });
+                const surgicalProtocols = await surgicalProtocolsService.listAll({ patient: id });
                 res.status(200).json({
-                    data: pph,
-                    message: 'pathological personal history listed'
+                    data: surgicalProtocols,
+                    message: 'surgical protocol listed'
                 });
             } catch (error) {
                 next(error);
@@ -54,15 +54,15 @@ function pphApi(app) {
         '/',
         validatorHandler(createOrUpdatePatientSchema),
         async function (req, res, next) {
-            const { body: pph } = req;
+            const { body: surgicalProtocols } = req;
             const { id } = req.params;
-            pph.patient = id
+            surgicalProtocols.patient = id
 
             try {
-                const patientId = await pphService.create({ payload: pph });
+                const patientId = await surgicalProtocolsService.create({ payload: surgicalProtocols });
                 res.status(200).json({
                     data: patientId,
-                    message: 'pathological personal history created'
+                    message: 'surgical protocol created'
                 });
             } catch (error) {
                 next(error);
@@ -78,10 +78,10 @@ function pphApi(app) {
             const { id } = req.params;
 
             try {
-                const user = await pphService.update({ body, query: { patient: id } });
+                const user = await surgicalProtocolsService.update({ body, query: { patient: id } });
                 res.status(200).json({
                     data: user,
-                    message: 'pathological personal history edited'
+                    message: 'surgical protocol edited'
                 });
             } catch (error) {
                 next(error);
@@ -94,10 +94,10 @@ function pphApi(app) {
         async function (req, res, next) {
             const { id } = req.params;
             try {
-                const patientId = await pphService.remove({ id })
+                const patientId = await surgicalProtocolsService.remove({ id })
                 res.status(200).json({
                     data: patientId,
-                    message: 'pathological personal history deleted'
+                    message: 'surgical protocol deleted'
                 });
             } catch (error) {
                 next(error);
@@ -105,4 +105,4 @@ function pphApi(app) {
         });
 }
 
-module.exports = pphApi;
+module.exports = surgicalProtocolsApi;

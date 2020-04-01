@@ -8,8 +8,8 @@ class MongoService {
         this.options = options;
     }
 
-    async listAll(query) {
-        const instances = await this.mongoDB.getAll(this.collection, query, this.options);
+    async listAll(query, pagination) {
+        const instances = await this.mongoDB.getAll(this.collection, query, this.options, pagination);
         return instances || [];
     }
 

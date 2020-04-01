@@ -2,12 +2,12 @@ const joi = require('@hapi/joi');
 const rutSchema = joi.number();
 const patientNameSchema = joi.string().min(3).max(30);
 const patienBirthdaySchema = joi.date();
-const patienAccountSchema = joi.string().min(10).max(30);
-const patienPhoneSchema = joi.number();
-const patienWeightSchema = joi.number();
-const patienImcSchema = joi.number();
-const patienSizeSchema = joi.string();
-const patienAddressSchema = joi.string();
+const patienAccountSchema = joi.string().min(0).max(30).allow('');
+const patienPhoneSchema = joi.number().allow('');
+const patienWeightSchema = joi.number().allow('');
+const patienImcSchema = joi.number().allow('');
+const patienSizeSchema = joi.string().allow('');
+const patienAddressSchema = joi.string().allow('');
 
 const createPatientSchema = {
     rut: rutSchema.required(),
