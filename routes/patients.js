@@ -35,6 +35,7 @@ function patientApi(app) {
     const heartSurgeryService = new MongoService('heartSurgery');
     const extracorporealCirculationService = new MongoService('extracorporealCirculation');
     const othersService = new MongoService('others');
+    const surgicalProtocolsService = new MongoService('surgicalProtocols');
 
     router.get('/', async function (req, res, next) {
         cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
