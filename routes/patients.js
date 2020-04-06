@@ -1,9 +1,11 @@
 const express = require('express');
+const { ObjectID } = require('mongodb');
 const MongoService = require('../services/mongoService');
 const { idSchema } = require('../utils/schemas/commons');
 const {
     createPatientSchema,
-    updatePatientSchema
+    updatePatientSchema,
+    queryPatient
 } = require('../utils/schemas/patient');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 
@@ -24,11 +26,42 @@ function cleanTextSearch(textSearch) {
 }
 
 
+function cleanFilters({ textSearch, datesRange, ...diagnosis }) {
+    const patientQuery = {}
+    if (textSearch) {
+        const cleanText = cleanTextSearch(textSearch);
+        Object.assign(patientQuery, {
+            $or: [
+                { rut: cleanText },
+                { firstname: cleanText },
+                { lastname: cleanText }
+            ]
+        })
+    }
+
+    if (datesRange) {
+        Object.assign(patientQuery, {
+            _id: {
+                $gt: ObjectID.createFromTime(new Date(datesRange[0]) / 1000),
+                $lt: ObjectID.createFromTime(new Date(datesRange[1]) / 1000)
+            }
+        })
+    }
+
+    for (let d in diagnosis) {
+        if (diagnosis[d] === 'true') patientQuery[`diagnosis.${d}`] = true;
+    }
+
+    return patientQuery
+}
+
+
 function patientApi(app) {
     const router = express.Router();
     app.use('/api/patients', router);
     const options = {};
     const patientService = new MongoService('patients', options);
+    const diagnosisService = new MongoService('diagnosis', options);
     const pphService = new MongoService('pph');
     const coronaryAngiographyService = new MongoService('coronaryAngiography');
     const transthoracicEchocardiogramService = new MongoService('transthoracicEchocardiogram');
@@ -37,25 +70,22 @@ function patientApi(app) {
     const othersService = new MongoService('others');
     const surgicalProtocolsService = new MongoService('surgicalProtocols');
 
-    router.get('/', async function (req, res, next) {
-        cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
-        const { query } = req;
-        const page = Number(req.query.page || 1);
-        delete query.page;
-        const resPerPage = 9;
+    router.get('/',
+        validatorHandler(queryPatient, 'params'),
+        async function (req, res, next) {
+            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
+            let { page = 1, ...filters } = req.query;
+            const patientQuery = cleanFilters(filters);
 
-        try {
-            const { textSearch } = query;
-            if (textSearch) {
-                const cleanText = cleanTextSearch(textSearch);
-                const patientQuery = {
-                    $or: [
-                        { rut: cleanText },
-                        { firstname: cleanText },
-                        { lastname: cleanText }
-                    ]
-                }
+            page = Number(page);
+            const resPerPage = 9;
+            try {
                 const { res: patients, count } = await patientService.listAll(patientQuery, { page, resPerPage });
+
+                patients.forEach((patient, i) => {
+                    patients[i].date = patient._id.getTimestamp();
+                })
+
                 return res.status(200).json({
                     data: patients,
                     count,
@@ -63,20 +93,10 @@ function patientApi(app) {
                     resPerPage,
                     message: 'patients listed'
                 });
-            } else delete query.textSearch;
-
-            const { res: patients, count } = await patientService.listAll(query, { page, resPerPage });
-            res.status(200).json({
-                data: patients,
-                count,
-                page,
-                resPerPage,
-                message: 'patients listed'
-            });
-        } catch (error) {
-            next(error);
-        }
-    });
+            } catch (error) {
+                next(error);
+            }
+        });
 
     router.get(
         '/:id',
@@ -90,27 +110,18 @@ function patientApi(app) {
 
                 if (all) {
                     const pph = await pphService.list({ patient: id });
-                    patient.pph = pph;
-
                     const coronaryAngiography = await coronaryAngiographyService.list({ patient: id });
-                    patient.coronaryAngiography = coronaryAngiography;
-
                     const transthoracicEchocardiogram = await transthoracicEchocardiogramService.list({ patient: id });
-                    patient.transthoracicEchocardiogram = transthoracicEchocardiogram;
-
                     const heartSurgery = await heartSurgeryService.list({ patient: id });
-                    patient.heartSurgery = heartSurgery;
-
                     const extracorporealCirculation = await extracorporealCirculationService.list({ patient: id });
-                    patient.extracorporealCirculation = extracorporealCirculation;
-
                     const others = await othersService.list({ patient: id });
-                    patient.others = others;
 
-                    return res.status(200).json({
-                        data: patient,
-                        message: 'patient listed'
-                    });
+                    patient.pph = pph;
+                    patient.coronaryAngiography = coronaryAngiography;
+                    patient.transthoracicEchocardiogram = transthoracicEchocardiogram;
+                    patient.heartSurgery = heartSurgery;
+                    patient.extracorporealCirculation = extracorporealCirculation;
+                    patient.others = others;
                 }
 
                 res.status(200).json({
@@ -172,6 +183,7 @@ function patientApi(app) {
                 await extracorporealCirculationService.remove({ patient: id });
                 await othersService.remove({ patient: id });
                 await surgicalProtocolsService.remove({ patient: id });
+                await diagnosisService.remove({ patient: id });
 
                 res.status(200).json({
                     data: patientId,
