@@ -15,6 +15,7 @@ const {
     SIXTY_MINUTES_IN_SECONDS
 } = require('../utils/time')
 
+const surgicalProtocolsService = new MongoService('surgicalProtocols');
 
 function cleanTextSearch(textSearch) {
     textSearch = textSearch.replace(/(a|á)/i, '(a|á)');
@@ -26,7 +27,7 @@ function cleanTextSearch(textSearch) {
 }
 
 
-function cleanFilters({ textSearch, datesRange, ...diagnosis }) {
+async function cleanFilters({ firstSurgeon, textSearch, datesRange, ...diagnosis }) {
     const patientQuery = {}
     if (textSearch) {
         const cleanText = cleanTextSearch(textSearch);
@@ -40,12 +41,22 @@ function cleanFilters({ textSearch, datesRange, ...diagnosis }) {
     }
 
     if (datesRange) {
+        const gte = datesRange[0].split('T')[0].concat('T00:00:00.000Z')
+        const lte = datesRange[1].split('T')[0].concat('T23:59:59.999Z')
+
         Object.assign(patientQuery, {
             _id: {
-                $gt: ObjectID.createFromTime(new Date(datesRange[0]) / 1000),
-                $lt: ObjectID.createFromTime(new Date(datesRange[1]) / 1000)
+                $gte: ObjectID.createFromTime(new Date(gte) / 1000),
+                $lte: ObjectID.createFromTime(new Date(lte) / 1000)
             }
         })
+    }
+
+    if (firstSurgeon) {
+        const protocols = await surgicalProtocolsService.listAll({ firstSurgeon: firstSurgeon });
+        const ids = protocols.map(p => ObjectID(p.patient))
+        if (patientQuery._id) Object.assign(patientQuery._id, { $in: ids })
+        else Object.assign(patientQuery, { _id: { $in: ids } })
     }
 
     for (let d in diagnosis) {
@@ -61,31 +72,24 @@ function patientApi(app) {
     app.use('/api/patients', router);
     const options = {};
     const patientService = new MongoService('patients', options);
-    const diagnosisService = new MongoService('diagnosis', options);
     const pphService = new MongoService('pph');
     const coronaryAngiographyService = new MongoService('coronaryAngiography');
     const transthoracicEchocardiogramService = new MongoService('transthoracicEchocardiogram');
     const heartSurgeryService = new MongoService('heartSurgery');
     const extracorporealCirculationService = new MongoService('extracorporealCirculation');
     const othersService = new MongoService('others');
-    const surgicalProtocolsService = new MongoService('surgicalProtocols');
 
     router.get('/',
         validatorHandler(queryPatient, 'params'),
         async function (req, res, next) {
             cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
             let { page = 1, ...filters } = req.query;
-            const patientQuery = cleanFilters(filters);
+            const patientQuery = await cleanFilters(filters);
 
             page = Number(page);
             const resPerPage = 9;
             try {
                 const { res: patients, count } = await patientService.listAll(patientQuery, { page, resPerPage });
-
-                patients.forEach((patient, i) => {
-                    patients[i].date = patient._id.getTimestamp();
-                })
-
                 return res.status(200).json({
                     data: patients,
                     count,
@@ -107,7 +111,6 @@ function patientApi(app) {
             const { all } = req.query;
             try {
                 const patient = await patientService.list({ id });
-
                 if (all) {
                     const pph = await pphService.list({ patient: id });
                     const coronaryAngiography = await coronaryAngiographyService.list({ patient: id });
@@ -183,7 +186,6 @@ function patientApi(app) {
                 await extracorporealCirculationService.remove({ patient: id });
                 await othersService.remove({ patient: id });
                 await surgicalProtocolsService.remove({ patient: id });
-                await diagnosisService.remove({ patient: id });
 
                 res.status(200).json({
                     data: patientId,
