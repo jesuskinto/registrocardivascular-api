@@ -8,6 +8,8 @@ const {
     updateUserSchema
 } = require('../utils/schemas/users');
 const validatorHandler = require('../utils/middleware/validatorHandler');
+const authHanlder = require('../utils/middleware/authHandler');
+
 
 const cacheResponse = require('../utils/cacheResponse');
 const {
@@ -22,22 +24,26 @@ function userApi(app) {
     const options = { projection: { password: 0 } };
     const userService = new MongoService("users", options);
 
-    router.get('/', async function (req, res, next) {
-        cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
-        const { query } = req;
-        try {
-            const users = await userService.listAll(query);
-            res.status(200).json({
-                data: users,
-                message: 'users listed'
-            });
-        } catch (error) {
-            next(error);
-        }
-    });
+    router.get(
+        '/',
+        authHanlder,
+        async function (req, res, next) {
+            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
+            const { query } = req;
+            try {
+                const users = await userService.listAll(query);
+                res.status(200).json({
+                    data: users,
+                    message: 'users listed'
+                });
+            } catch (error) {
+                next(error);
+            }
+        });
 
     router.get(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
@@ -55,12 +61,12 @@ function userApi(app) {
 
     router.post(
         '/',
+        authHanlder,
         validatorHandler(createUserSchema),
         async function (req, res, next) {
             const { body: user } = req;
 
             try {
-                // TODO - mover a nivel de mongo con unique field
                 const { email } = user;
                 const users = await userService.listAll({ email });
                 if (users.length) return res.status(400).json({
@@ -79,6 +85,7 @@ function userApi(app) {
 
     router.patch(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         validatorHandler(updateUserSchema),
         async function (req, res, next) {
@@ -86,7 +93,6 @@ function userApi(app) {
             const { id } = req.params;
 
             try {
-                // TODO - mover a nivel de mongo con unique field
                 const { email } = body;
                 const users = await userService.listAll({ email, _id: { $ne: ObjectId(id) } });
                 if (users.length) return res.status(400).json({
@@ -105,6 +111,7 @@ function userApi(app) {
 
     router.delete(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             const { id } = req.params;

@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const MongoService = require('../services/mongoService');
 const validatorHandler = require('../utils/middleware/validatorHandler');
 const { authSchema } = require('../utils/schemas/users');
+const { config } = require('../config');
+const KEY = config.key;
 
 const userService = new MongoService("users");
 
@@ -26,10 +28,10 @@ function authApi(app) {
                     message: 'La contraseña no coinside con el correo',
                 })
 
-                const token = jwt.sign({ data: user }, password, { expiresIn: 1440 });
+                const token = jwt.sign({ data: user }, KEY, { expiresIn: 1440 });
                 res.status(200).json({
                     token: token,
-                    message: 'Autenticación correcta',
+                    message: 'Autenticación correcta'
                 });
             } catch (error) {
                 next(error);

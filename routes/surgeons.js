@@ -6,6 +6,8 @@ const {
     updateSurgeonSchema
 } = require('../utils/schemas/surgeon');
 const validatorHandler = require('../utils/middleware/validatorHandler');
+const authHanlder = require('../utils/middleware/authHandler');
+
 
 const cacheResponse = require('../utils/cacheResponse');
 const {
@@ -20,22 +22,26 @@ function surgeonApi(app) {
     const options = {};
     const surgeonService = new MongoService("surgeon", options);
 
-    router.get('/', async function (req, res, next) {
-        cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
-        const { query } = req;
-        try {
-            const users = await surgeonService.listAll(query);
-            res.status(200).json({
-                data: users,
-                message: 'surgeons listed'
-            });
-        } catch (error) {
-            next(error);
-        }
-    });
+    router.get(
+        '/',
+        authHanlder,
+        async function (req, res, next) {
+            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
+            const { query } = req;
+            try {
+                const users = await surgeonService.listAll(query);
+                res.status(200).json({
+                    data: users,
+                    message: 'surgeons listed'
+                });
+            } catch (error) {
+                next(error);
+            }
+        });
 
     router.get(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
@@ -53,6 +59,7 @@ function surgeonApi(app) {
 
     router.post(
         '/',
+        authHanlder,
         validatorHandler(createSurgeonSchema),
         async function (req, res, next) {
             const { body: user } = req;
@@ -70,6 +77,7 @@ function surgeonApi(app) {
 
     router.patch(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         validatorHandler(updateSurgeonSchema),
         async function (req, res, next) {
@@ -89,6 +97,7 @@ function surgeonApi(app) {
 
     router.delete(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             const { id } = req.params;

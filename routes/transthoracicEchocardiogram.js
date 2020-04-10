@@ -5,6 +5,7 @@ const {
     createOrUpdatePatientSchema
 } = require('../utils/schemas/transthoracicEchocardiogram');
 const validatorHandler = require('../utils/middleware/validatorHandler');
+const authHanlder = require('../utils/middleware/authHandler');
 
 const cacheResponse = require('../utils/cacheResponse');
 const {
@@ -19,22 +20,26 @@ function transthoracicEchocardiogramApi(app) {
     const options = {};
     const transthoracicEchocardiogramService = new MongoService('transthoracicEchocardiogram', options);
 
-    router.get('/', async function (req, res, next) {
-        cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
-        const { query } = req;
-        try {
-            const pphs = await transthoracicEchocardiogramService.listAll(query);
-            res.status(200).json({
-                data: pphs,
-                message: 'transthoracic echocardiogram listed'
-            });
-        } catch (error) {
-            next(error);
-        }
-    });
+    router.get(
+        '/',
+        authHanlder,
+        async function (req, res, next) {
+            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
+            const { query } = req;
+            try {
+                const pphs = await transthoracicEchocardiogramService.listAll(query);
+                res.status(200).json({
+                    data: pphs,
+                    message: 'transthoracic echocardiogram listed'
+                });
+            } catch (error) {
+                next(error);
+            }
+        });
 
     router.get(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
@@ -52,6 +57,7 @@ function transthoracicEchocardiogramApi(app) {
 
     router.post(
         '/',
+        authHanlder,
         validatorHandler(createOrUpdatePatientSchema),
         async function (req, res, next) {
             const { body: transthoracicEchocardiogram } = req;
@@ -71,6 +77,7 @@ function transthoracicEchocardiogramApi(app) {
 
     router.patch(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         validatorHandler(createOrUpdatePatientSchema),
         async function (req, res, next) {
@@ -90,6 +97,7 @@ function transthoracicEchocardiogramApi(app) {
 
     router.delete(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             const { id } = req.params;

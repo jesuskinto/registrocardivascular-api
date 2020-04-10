@@ -5,6 +5,8 @@ const {
     createOrUpdatePatientSchema
 } = require('../utils/schemas/diagnosis');
 const validatorHandler = require('../utils/middleware/validatorHandler');
+const authHanlder = require('../utils/middleware/authHandler');
+
 
 const cacheResponse = require('../utils/cacheResponse');
 const {
@@ -20,22 +22,26 @@ function diagnosisApi(app) {
     const diagnosisService = new MongoService('patients', options);
 
 
-    router.get('/', async function (req, res, next) {
-        cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
-        const { query } = req;
-        try {
-            const diagnosiss = await diagnosisService.listAll(query);
-            res.status(200).json({
-                data: diagnosiss,
-                message: 'diagnosis listed'
-            });
-        } catch (error) {
-            next(error);
-        }
-    });
+    router.get(
+        '/',
+        authHanlder,
+        async function (req, res, next) {
+            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
+            const { query } = req;
+            try {
+                const diagnosiss = await diagnosisService.listAll(query);
+                res.status(200).json({
+                    data: diagnosiss,
+                    message: 'diagnosis listed'
+                });
+            } catch (error) {
+                next(error);
+            }
+        });
 
     router.get(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
@@ -53,6 +59,7 @@ function diagnosisApi(app) {
 
     router.post(
         '/',
+        authHanlder,
         validatorHandler(createOrUpdatePatientSchema),
         async function (req, res, next) {
             const { body: diagnosis } = req;
@@ -70,6 +77,7 @@ function diagnosisApi(app) {
 
     router.patch(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         validatorHandler(createOrUpdatePatientSchema),
         async function (req, res, next) {
@@ -89,6 +97,7 @@ function diagnosisApi(app) {
 
     router.delete(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             const { id } = req.params;

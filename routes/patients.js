@@ -8,6 +8,8 @@ const {
     queryPatient
 } = require('../utils/schemas/patient');
 const validatorHandler = require('../utils/middleware/validatorHandler');
+const authHanlder = require('../utils/middleware/authHandler');
+const { isEmpty } = require('../utils/commonsFunctions')
 
 const cacheResponse = require('../utils/cacheResponse');
 const {
@@ -80,6 +82,7 @@ function patientApi(app) {
     const othersService = new MongoService('others');
 
     router.get('/',
+        authHanlder,
         validatorHandler(queryPatient, 'params'),
         async function (req, res, next) {
             cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
@@ -104,6 +107,7 @@ function patientApi(app) {
 
     router.get(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
@@ -111,6 +115,12 @@ function patientApi(app) {
             const { all } = req.query;
             try {
                 const patient = await patientService.list({ id });
+
+                if (isEmpty(patient)) return res.status(400).json({
+                    data: null,
+                    message: 'patient not found'
+                });
+
                 if (all) {
                     const pph = await pphService.list({ patient: id });
                     const coronaryAngiography = await coronaryAngiographyService.list({ patient: id });
@@ -138,6 +148,7 @@ function patientApi(app) {
 
     router.post(
         '/',
+        authHanlder,
         validatorHandler(createPatientSchema),
         async function (req, res, next) {
             const { body: patient } = req;
@@ -155,6 +166,7 @@ function patientApi(app) {
 
     router.patch(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         validatorHandler(updatePatientSchema),
         async function (req, res, next) {
@@ -174,6 +186,7 @@ function patientApi(app) {
 
     router.delete(
         '/:id',
+        authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
             const { id } = req.params;
