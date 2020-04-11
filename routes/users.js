@@ -11,13 +11,6 @@ const validatorHandler = require('../utils/middleware/validatorHandler');
 const authHanlder = require('../utils/middleware/authHandler');
 
 
-const cacheResponse = require('../utils/cacheResponse');
-const {
-    FIVE_MINUTES_IN_SECONDS,
-    SIXTY_MINUTES_IN_SECONDS
-} = require('../utils/time')
-
-
 function userApi(app) {
     const router = express.Router();
     app.use('/api/users', router);
@@ -28,7 +21,6 @@ function userApi(app) {
         '/',
         authHanlder,
         async function (req, res, next) {
-            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
             const { query } = req;
             try {
                 const users = await userService.listAll(query);
@@ -46,7 +38,6 @@ function userApi(app) {
         authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
-            cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             try {
                 const user = await userService.list({ id });

@@ -11,12 +11,6 @@ const validatorHandler = require('../utils/middleware/validatorHandler');
 const authHanlder = require('../utils/middleware/authHandler');
 const { isEmpty } = require('../utils/commonsFunctions')
 
-const cacheResponse = require('../utils/cacheResponse');
-const {
-    FIVE_MINUTES_IN_SECONDS,
-    SIXTY_MINUTES_IN_SECONDS
-} = require('../utils/time')
-
 const surgicalProtocolsService = new MongoService('surgicalProtocols');
 
 function cleanTextSearch(textSearch) {
@@ -85,7 +79,6 @@ function patientApi(app) {
         authHanlder,
         validatorHandler(queryPatient, 'params'),
         async function (req, res, next) {
-            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
             let { page = 1, ...filters } = req.query;
             const patientQuery = await cleanFilters(filters);
 
@@ -110,7 +103,6 @@ function patientApi(app) {
         authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
-            cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             const { all } = req.query;
             try {

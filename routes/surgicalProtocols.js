@@ -9,12 +9,6 @@ const {
 const validatorHandler = require('../utils/middleware/validatorHandler');
 const authHanlder = require('../utils/middleware/authHandler');
 
-const cacheResponse = require('../utils/cacheResponse');
-const {
-    FIVE_MINUTES_IN_SECONDS,
-    SIXTY_MINUTES_IN_SECONDS
-} = require('../utils/time')
-
 const surgeonService = new MongoService("surgeon");
 async function setSurgions({ firstSurgeon, othersSurgeons }) {
     if (firstSurgeon) firstSurgeon = await surgeonService.list({ id: firstSurgeon });
@@ -37,7 +31,6 @@ function surgicalProtocolsApi(app) {
         '/',
         authHanlder,
         async function (req, res, next) {
-            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
             const { query } = req;
             try {
                 const protocols = await surgicalProtocolsService.listAll(query);
@@ -55,7 +48,6 @@ function surgicalProtocolsApi(app) {
         authHanlder,
         validatorHandler({ id: idSchema, id_protocol: idSchema }, 'params'),
         async function (req, res, next) {
-            cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id, id_protocol } = req.params;
             try {
                 if (id_protocol) {

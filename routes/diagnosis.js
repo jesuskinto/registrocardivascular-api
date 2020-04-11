@@ -8,13 +8,6 @@ const validatorHandler = require('../utils/middleware/validatorHandler');
 const authHanlder = require('../utils/middleware/authHandler');
 
 
-const cacheResponse = require('../utils/cacheResponse');
-const {
-    FIVE_MINUTES_IN_SECONDS,
-    SIXTY_MINUTES_IN_SECONDS
-} = require('../utils/time')
-
-
 function diagnosisApi(app) {
     const router = express.Router();
     app.use('/api/diagnosis', router);
@@ -26,7 +19,6 @@ function diagnosisApi(app) {
         '/',
         authHanlder,
         async function (req, res, next) {
-            cacheResponse(res, FIVE_MINUTES_IN_SECONDS)
             const { query } = req;
             try {
                 const diagnosiss = await diagnosisService.listAll(query);
@@ -44,7 +36,6 @@ function diagnosisApi(app) {
         authHanlder,
         validatorHandler({ id: idSchema }, 'params'),
         async function (req, res, next) {
-            cacheResponse(res, SIXTY_MINUTES_IN_SECONDS)
             const { id } = req.params;
             try {
                 const resp = await diagnosisService.list({ id });
