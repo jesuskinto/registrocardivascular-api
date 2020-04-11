@@ -8,6 +8,7 @@ const patienWeightSchema = joi.number().allow('');
 const patienImcSchema = joi.number().allow('');
 const patienSizeSchema = joi.string().allow('');
 const patienAddressSchema = joi.string().allow('');
+const diagnosisSchema = joi.object();
 const booleanSchema = joi.boolean();
 
 const createPatientSchema = {
@@ -20,7 +21,8 @@ const createPatientSchema = {
     weight: patienWeightSchema,
     imc: patienImcSchema,
     size: patienSizeSchema,
-    address: patienAddressSchema
+    address: patienAddressSchema,
+    diagnosis: diagnosisSchema
 };
 
 const updatePatientSchema = {
@@ -33,7 +35,8 @@ const updatePatientSchema = {
     weight: patienWeightSchema,
     imc: patienImcSchema,
     size: patienSizeSchema,
-    address: patienAddressSchema
+    address: patienAddressSchema,
+    diagnosis: diagnosisSchema
 };
 
 const queryPatient = {
