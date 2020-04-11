@@ -19,7 +19,6 @@
         "DB_HOST": "@registro-medico-db-host",
         "DB_NAME": "@registro-medico-db-name",
         "NODE_ENV": "@registro-medico-node-env",
-        "PORT": "@registro-medico-port",
-        "CORS": "@registro-medico-cors"
+        "JWT_KEY": "@registro-medico-jwt-key"
     }
 }
