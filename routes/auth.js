@@ -28,7 +28,7 @@ function authApi(app) {
                     message: 'La contraseña no coinside con el correo',
                 })
 
-                const token = jwt.sign({ data: user }, KEY, { expiresIn: 1440 });
+                const token = jwt.sign({ data: user }, KEY);
                 res.status(200).json({
                     token: token,
                     message: 'Autenticación correcta'

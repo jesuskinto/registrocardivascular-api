@@ -79,13 +79,14 @@ function patientApi(app) {
         authHanlder,
         validatorHandler(queryPatient, 'params'),
         async function (req, res, next) {
+            const order = { _id: -1 };
             let { page = 1, ...filters } = req.query;
             const patientQuery = await cleanFilters(filters);
 
             page = Number(page);
             const resPerPage = 9;
             try {
-                const { res: patients, count } = await patientService.listAll(patientQuery, { page, resPerPage });
+                const { res: patients, count } = await patientService.listAll(patientQuery, { page, resPerPage }, order);
                 return res.status(200).json({
                     data: patients,
                     count,
