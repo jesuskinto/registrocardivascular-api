@@ -1,5 +1,5 @@
 const joi = require('@hapi/joi');
-const rutSchema = joi.number();
+const rutSchema = joi.string();
 const patientStringSchema = joi.string().min(3).max(30);
 const patienBirthdaySchema = joi.date();
 const patienAccountSchema = joi.string().min(0).max(30).allow('');
