@@ -23,7 +23,20 @@ function cleanTextSearch(textSearch) {
 }
 
 
-async function cleanFilters({ firstSurgeon, textSearch, datesRange, ...diagnosis }) {
+async function cleanFilters(filters) {
+    const {
+        firstSurgeon,
+        textSearch,
+        datesRange,
+        accidente_cerebro_vascular,
+        delirio,
+        fibrilacion_auricular,
+        infeccion_herida_superficial,
+        muerte,
+        ...diagnosis
+    } = filters
+
+
     const patientQuery = {}
     if (textSearch) {
         const cleanText = cleanTextSearch(textSearch);
@@ -36,10 +49,10 @@ async function cleanFilters({ firstSurgeon, textSearch, datesRange, ...diagnosis
         })
     }
 
+
     if (datesRange) {
         const gte = datesRange[0].split('T')[0].concat('T00:00:00.000Z')
         const lte = datesRange[1].split('T')[0].concat('T23:59:59.999Z')
-
         Object.assign(patientQuery, {
             _id: {
                 $gte: ObjectID.createFromTime(new Date(gte) / 1000),
@@ -48,12 +61,36 @@ async function cleanFilters({ firstSurgeon, textSearch, datesRange, ...diagnosis
         })
     }
 
+
     if (firstSurgeon) {
-        const protocols = await surgicalProtocolsService.listAll({ firstSurgeon: firstSurgeon });
+        const protocols = await surgicalProtocolsService.listAll({ firstSurgeon });
         const ids = protocols.map(p => ObjectID(p.patient))
         if (patientQuery._id) Object.assign(patientQuery._id, { $in: ids })
         else Object.assign(patientQuery, { _id: { $in: ids } })
     }
+
+
+    let fields = []
+    if (delirio) fields.push({ 'complicaciones.delirio_alucinaciones': true })
+    if (accidente_cerebro_vascular) fields.push({ 'complicaciones.accidente_vascular_cerebra': { $in: ['isaquemico', 'hemorragicotrue'] } })
+    if (fibrilacion_auricular) fields.push({ 'complicaciones.arritmias': 'fa' })
+    if (muerte) fields.push({ 'complicaciones.muerte.presente': true })
+    if (infeccion_herida_superficial) fields.push({ 'complicaciones.infeccion_herida_operatoria_superficial.presente': true })
+
+    if (fields.length > 0) {
+        const heartSurgeryService = new MongoService('heartSurgery', { patient: 1 });
+        const res = await heartSurgeryService.listAll({ $and: fields })
+
+        if (res) {
+            const patientIdInHeartSurgery = res.map(p => ObjectID(p.patient))
+            if (patientQuery._id && patientQuery._id.$in) Object.assign(patientQuery._id.$in, { patientIdInHeartSurgery })
+            else if (patientQuery._id) Object.assign(patientQuery._id, { $in: patientIdInHeartSurgery })
+            else Object.assign(patientQuery, { _id: { $in: patientIdInHeartSurgery } })
+        }
+
+    }
+
+
 
     for (let d in diagnosis) {
         if (diagnosis[d] === 'true') patientQuery[`diagnosis.${d}`] = true;
@@ -77,12 +114,12 @@ function patientApi(app) {
 
     router.get('/',
         authHanlder,
-        validatorHandler(queryPatient, 'params'),
+        validatorHandler(queryPatient, 'query'),
         async function (req, res, next) {
             const order = { _id: -1 };
             let { page = 1, ...filters } = req.query;
-            const patientQuery = await cleanFilters(filters);
 
+            const patientQuery = await cleanFilters(filters);
             page = Number(page);
             const resPerPage = 9;
             try {
@@ -115,19 +152,12 @@ function patientApi(app) {
                 });
 
                 if (all) {
-                    const pph = await pphService.list({ patient: id });
-                    const coronaryAngiography = await coronaryAngiographyService.list({ patient: id });
-                    const transthoracicEchocardiogram = await transthoracicEchocardiogramService.list({ patient: id });
-                    const heartSurgery = await heartSurgeryService.list({ patient: id });
-                    const extracorporealCirculation = await extracorporealCirculationService.list({ patient: id });
-                    const others = await othersService.list({ patient: id });
-
-                    patient.pph = pph;
-                    patient.coronaryAngiography = coronaryAngiography;
-                    patient.transthoracicEchocardiogram = transthoracicEchocardiogram;
-                    patient.heartSurgery = heartSurgery;
-                    patient.extracorporealCirculation = extracorporealCirculation;
-                    patient.others = others;
+                    patient.pph = await pphService.list({ patient: id });
+                    patient.coronaryAngiography = await coronaryAngiographyService.list({ patient: id });
+                    patient.transthoracicEchocardiogram = await transthoracicEchocardiogramService.list({ patient: id });
+                    patient.heartSurgery = await heartSurgeryService.list({ patient: id });
+                    patient.extracorporealCirculation = await extracorporealCirculationService.list({ patient: id });
+                    patient.others = await othersService.list({ patient: id });
                 }
 
                 res.status(200).json({

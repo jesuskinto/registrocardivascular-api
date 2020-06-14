@@ -1,32 +1,24 @@
-const joi = require('@hapi/joi');
-const booleanSchema = joi.boolean();
-const diabetesSchema = joi.string();
-const enfermedadCerebroVascularSchema = joi.string();
-const enfermedadRenalSchema = joi.object();
-const cancerSchema = joi.object();
-const endocarditisSchema = joi.string();
-const stringSchema = joi.string();
-const arritmiaVentricularesSchema = joi.string();
-const bloqueoAvSchema = joi.object();
-const infartoAgudoMiocardioSchema = joi.string();
-const claseFuncionalHyhaSchema = joi.string();
-const shockCardiogenicoSchema = joi.object();
+const {
+    stringSchema,
+    booleanSchema,
+    objectSchema
+} = require('./commons');
 
 
 const createOrUpdatePatientSchema = {
-    diabetes: diabetesSchema,
+    diabetes: stringSchema,
     hipertencion: booleanSchema,
     asma: booleanSchema,
-    enfermedad_renal: enfermedadRenalSchema,
+    enfermedad_renal: objectSchema,
     enfermedad_arterial_periferica: booleanSchema,
-    enfermedad_cerebro_vascular: enfermedadCerebroVascularSchema,
+    enfermedad_cerebro_vascular: stringSchema,
     enfermedad_pulmonar_obstructiva_cronica: booleanSchema,
     enfermedad_carotidea: booleanSchema,
     tabaquismo: booleanSchema,
     alcohol: booleanSchema,
     drogas: booleanSchema,
-    cancer: cancerSchema,
-    endocarditis: endocarditisSchema,
+    cancer: objectSchema,
+    endocarditis: stringSchema,
     enfermedad_hepatica: booleanSchema,
     apnea_del_sueno: booleanSchema,
     inmunosupresion: booleanSchema,
@@ -35,12 +27,12 @@ const createOrUpdatePatientSchema = {
     cirugias_previas: stringSchema,
     fibrilacion_auricular: stringSchema,
     flutter_auricular: booleanSchema,
-    arritmia_ventriculares: arritmiaVentricularesSchema,
-    bloqueo_av: bloqueoAvSchema,
-    infarto_agudo_miocardio: infartoAgudoMiocardioSchema,
+    arritmia_ventriculares: stringSchema,
+    bloqueo_av: objectSchema,
+    infarto_agudo_miocardio: stringSchema,
     infarto_agudo_miocardio_tratamiento: stringSchema,
-    clase_funcional_nyha: claseFuncionalHyhaSchema,
-    shock_cardiogenico: shockCardiogenicoSchema
+    clase_funcional_nyha: stringSchema,
+    shock_cardiogenico: objectSchema
 };
 
 module.exports = {

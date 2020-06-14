@@ -1,7 +1,7 @@
-
-const joi = require('@hapi/joi');
-const stringSchema = joi.string().allow('');
-const booleanSchema = joi.boolean();
+const {
+    stringSchema,
+    booleanSchema
+} = require('./commons');
 
 const createOrUpdatePatientSchema = {
     estenosis_aortica: booleanSchema,

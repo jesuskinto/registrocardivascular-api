@@ -1,7 +1,8 @@
-const joi = require('@hapi/joi');
-const stringSchema = joi.string();
-const objectSchema = joi.object();
-const dateSchema = joi.date();
+const {
+    stringSchema,
+    dateSchema,
+    objectSchema
+} = require('./commons');
 
 const createOrUpdatePatientSchema = {
     hora_inicio_cirugia: dateSchema,

@@ -1,7 +1,7 @@
-const joi = require('@hapi/joi');
-const objectSchema = joi.object();
-const stringSchema = joi.string();
-
+const {
+    stringSchema,
+    objectSchema
+} = require('./commons');
 
 const createOrUpdatePatientSchema = {
     esternosis_aortica: objectSchema,

@@ -1,8 +1,9 @@
-const joi = require('@hapi/joi');
-const booleanSchema = joi.boolean();
-const dateSchema = joi.date();
-const stringSchema = joi.string();
-const objectSchema = joi.object();
+const {
+    stringSchema,
+    booleanSchema,
+    dateSchema,
+    objectSchema
+} = require('./commons');
 
 
 const createOrUpdatecoronaryAngiographySchema = {

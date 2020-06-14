@@ -1,6 +1,7 @@
-const joi = require('@hapi/joi');
-const stringSchema = joi.string();
-const objectSchema = joi.object();
+const {
+    stringSchema,
+    objectSchema
+} = require('./commons');
 
 
 const createOrUpdatePatientSchema = {
