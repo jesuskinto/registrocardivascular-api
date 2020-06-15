@@ -14,6 +14,7 @@ const createOrUpdatePatientSchema = {
     enfermedad_cerebro_vascular: stringSchema,
     enfermedad_pulmonar_obstructiva_cronica: booleanSchema,
     enfermedad_carotidea: booleanSchema,
+    enfermedad_gastrica: booleanSchema,
     tabaquismo: booleanSchema,
     alcohol: booleanSchema,
     drogas: booleanSchema,

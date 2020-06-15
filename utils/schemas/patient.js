@@ -49,7 +49,8 @@ const createPatientSchema = {
     imc: patienImcSchema,
     size: patienSizeSchema,
     address: patienAddressSchema,
-    diagnosis: diagnosisSchema
+    diagnosis: diagnosisSchema,
+    riskcalculatorresult: stringSchema
 };
 
 const updatePatientSchema = {
@@ -63,7 +64,8 @@ const updatePatientSchema = {
     imc: patienImcSchema,
     size: patienSizeSchema,
     address: patienAddressSchema,
-    diagnosis: diagnosisSchema
+    diagnosis: diagnosisSchema,
+    riskcalculatorresult: stringSchema
 };
 
 const queryPatient = {

@@ -30,7 +30,8 @@ const createOrUpdatePatientSchema = {
     ventriculoseptoplastia: objectSchema,
     pericardiectomia_anterior: booleanSchema,
     opciones_quirurgicas: objectSchema,
-    complicaciones: objectSchema
+    complicaciones: objectSchema,
+    trauma_vascular_postpuncion: stringSchema
 };
 
 module.exports = {
